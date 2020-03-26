@@ -19,6 +19,7 @@ const token = auth_json[0].token;
 const liteBlue = 378866;
 const yellow = 15914832;
 const red = 15865366;
+const green = 311125;
 
 // Winston logger setup
 const logger = winston.createLogger({
@@ -30,8 +31,8 @@ const logger = winston.createLogger({
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' })
+    new winston.transports.File({ filename: '.gitignore/logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: '.gitignore/logs/combined.log' })
   ]
 });
 
@@ -47,8 +48,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 
-// Songs queue is stored here
-let servers = {};
+// Servers connected with the bot stored here
+var servers = {};
 
 // Log into console when on
 client.once('ready', () => {
@@ -61,7 +62,7 @@ client.once('ready', () => {
 
 // Read user inputs on chat
 client.on('message', message => {
-  const args = message.content.substring(PREFIX.length).split(' ');
+  let args = message.content.substring(PREFIX.length).split(' ');
 
   switch(args[0]) {
     case 'ping':
@@ -73,7 +74,7 @@ client.on('message', message => {
       })).catch((err) => {
         logger.error(err);
       });
-      return;
+      break;
     case 'h':
     case 'help':
       message.react('🚬').then(message.channel.send('', {
@@ -94,7 +95,7 @@ client.on('message', message => {
       })).catch((err) => {
         logger.error(err);
       });
-      return;
+      break;
     case 'p':
     case 'play':
       // Function that validates if the provided string is url
@@ -108,9 +109,20 @@ client.on('message', message => {
         return !!pattern.test(str);
       }
       //Function that plays the music stream
-      function play(connection, message) {
-        return;
-      }
+      function playmp(connection, message) {
+        let server = servers[message.guild.id];
+        server.isPlaying = true;
+        server.dispatcher = connection.play(ytdl(server.queue[0], {filter: 'audioonly'}));
+        server.queue.shift();
+        server.dispatcher.on('finish', () => {
+          server.isPlaying = false;
+          if(server.queue[0]) {
+            playmp(connection, message);
+          } else {
+            connection.disconnect();
+          }
+        });
+    }
       // Check if the member is in a voice channel
       if(!message.member.voice.channel) {
         message.react('🤦‍♂️').then(message.channel.send('', {
@@ -121,7 +133,9 @@ client.on('message', message => {
         })).catch((err) => {
           logger.error(err);
         });
-        return;
+        break;
+      } else {
+        message.member.voice.channel.join();
       }
       //Check if there is something after the play command
       if(!args[1]) {
@@ -133,14 +147,93 @@ client.on('message', message => {
         })).catch((err) => {
           logger.error(err);
         });
-        return;
+        break;
       }
+      // Create for the current server a null queue and save it in a variable
+      if(!servers[message.guild.id]) {
+        servers[message.guild.id] = {
+          queue: [],
+          isPlaying: false
+        }
+      }
+      var server = servers[message.guild.id];
+      // React on the user that send the song to be played
+      message.react('🎺');
       // Check if the message contains a link or a yt search
+      if(validURL(args[1])) {
+        // Play music from a link
+        if(server.isPlaying) {
+          server.queue.push(args[1]);
+          break;
+        }
+        server.queue.push(args[1]);
+        if(message.guild.voice.connection) {
+          playmp(message.guild.voice.connection, message);
+        } else {
+          logger.error(`message.guild.voice.connection = null`);
+        }
+
+      } else {
+        //Search youtube and play
+        let dataString = ''
+        for(let i = 1; i < args.length; i++) {
+          dataString = dataString + ' ' + args[i];
+        }
+        let searchString = dataString.substr(1);
+        yts(searchString, (err, r) => {
+          if(err) {
+            logger.error(err);
+          }
+          var link = r.videos[0].url;
+          if(server.isPlaying) {
+            server.queue.push(link);
+            message.channel.send({
+              embed: {
+                type: 'link',
+                description: 'Song queued',
+                url: link,
+                color: green
+              }
+            });
+            return;
+          }
+          server.queue.push(link);
+          logger.info(`search for ${searchString} and resulted ${link}`);
+          if(message.guild.voice.connection) {
+            playmp(message.guild.voice.connection, message);
+          } else {
+            logger.error(`message.guild.voice.connection = null`);
+          }
+        });
 
 
-      // Function
-      return;
+      }
+      break;
+    case 'n':
+    case 'next':
+      var server_n = servers[message.guild.id];
+      server_n.queue.shift();
+      if(server_n.dispatcher) {
+        server_n.dispatcher.destroy();
+      }
+      break;
+    case 's':
+    case 'stop':
+      let server_s = servers[message.guild.id];
+      if(message.guild.voice.connection) {
+        for(let i = server_s.queue.length - 1; i >= 0; i--) {
+          server_s.queue.splice(i, 1);
+        }
+        server_s.dispatcher.destroy();
+        logger.info(`Stopped the queue!`);
+      }
+      if(message.guild.voice.connection) {
+        message.guild.voice.connection.disconnect();
+      }
+      break;
   }
+
+
 });
 
 
