@@ -45,12 +45,18 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
+
+
 // Songs queue is stored here
 let servers = {};
 
 // Log into console when on
 client.once('ready', () => {
   logger.info(`JunkieMusic is on - version ${version}`);
+  // Add description on the bot
+  client.user.setActivity('plebs crying for -help', {
+    type: 'WATCHING'
+  });
 });
 
 // Read user inputs on chat
