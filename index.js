@@ -24,8 +24,8 @@ const logger = winston.createLogger({
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: '.gitignore/logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: '.gitignore/logs/combined.log' })
+    new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: './logs/combined.log' })
   ]
 });
 
@@ -111,6 +111,7 @@ async function execute(message, serverQueue) {
 			// Play the song or add it to the queue.
 			const songInfo = await ytdl.getInfo(args[1]);
 			const song = {
+        authorId: message.author.id,
 				title: songInfo.title,
 				url: songInfo.video_url
 			};
@@ -140,7 +141,7 @@ async function execute(message, serverQueue) {
 			} else {
 				// There is already a queue contract.
 				serverQueue.songs.push(song);
-				return sendEmbed(message, {'emoji': '🎸', 'description': `Queued [${song.title}](${song.url}) by <@${message.author.id}>`, 'color': yellow});
+				return sendEmbed(message, {'emoji': '🎸', 'description': `Queued [${song.title}](${song.url}) by <@${song.authorId}>`, 'color': yellow});
 			}
 		}
 	} else {
@@ -152,12 +153,14 @@ async function execute(message, serverQueue) {
 		const searchString = dataString.substr(1);
 		// Play the song or add it to the queue.
 		let song = {
+      authorId: '',
 			title: '',
 			url: ''
 		}
 		try {
 			const songInfo = await yts(searchString);
 			song = {
+        authorId: message.author.id,
 				title: songInfo.videos[0].title,
 				url: songInfo.videos[0].url
 			};
@@ -192,7 +195,7 @@ async function execute(message, serverQueue) {
 		} else {
 			// There is already a queue contract.
 			serverQueue.songs.push(song);
-			return sendEmbed(message, {'emoji': '🎸', 'description': `Queued [${song.title}](${song.url}) by <@${message.author.id}>`, 'color': yellow});
+			return sendEmbed(message, {'emoji': '🎸', 'description': `Queued [${song.title}](${song.url}) by <@${song.authorId}>`, 'color': yellow});
 		}
 	}
 }
@@ -237,7 +240,7 @@ function play(message, song) {
 			play(message, serverQueue.songs[0]);
 		})
 		.on('error', error => logger.info(error));
-	if(dispatcher) sendEmbed(message, {'title': `Now playing`, 'description': `[${song.title}](${song.url}) by <@${message.author.id}>`, 'color': green});
+	if(dispatcher) sendEmbed(message, {'title': `Now playing`, 'description': `[${song.title}](${song.url}) by <@${song.authorId}>`, 'color': green});
 }
 
 function ping(message) {
