@@ -1,6 +1,6 @@
 // Dependencies
 const Discord = require('discord.js');
-const {prefix, token, version} = require('./config.json');
+const {prefix, token, version, admins} = require('./config.json');
 const ytdl = require('ytdl-core');
 const winston = require('winston');
 const yts = require('yt-search');
@@ -81,6 +81,16 @@ client.on('message', async message => {
 		return;
 	} else if(message.content.toLowerCase().startsWith(`${prefix}help`) || message.content.toLowerCase().startsWith(`${prefix}h`)) {
 		help(message);
+		return;
+	} else if(message.content.toLowerCase().startsWith(`${prefix}queue`)) {
+		showQueue(message, serverQueue);
+		return;
+	} else if(message.content.toLowerCase().startsWith(`${prefix}remove`)) {
+		remove(message, serverQueue);
+		return;
+	} else if(message.content.toLowerCase().startsWith(`${prefix}qq`)) {
+		resetBot(message, serverQueue);
+		return;
 	} else {
 		return;
 	}
@@ -89,7 +99,9 @@ client.on('message', async message => {
 // Function that executes the play command.
 async function execute(message, serverQueue) {
 	const args = message.content.split(' ');
-	if(!args[1]) return sendEmbed(message, {'emoji': '👿', 'description': 'I need you to tell me what to play BABOON! 🤮', 'color': orange});
+	const info = await ytdl.getInfo(args[1]);
+	console.log(info);
+	if(args.length === 1) return sendEmbed(message, {'emoji': '👿', 'description': 'I need you to tell me what to play BABOON! 🤮', 'color': orange});
 	const voiceChannel = message.member.voice.channel;
 	// Check if the user is in a voice channel.
 	if(!voiceChannel) {
@@ -111,7 +123,7 @@ async function execute(message, serverQueue) {
 			// Play the song or add it to the queue.
 			const songInfo = await ytdl.getInfo(args[1]);
 			const song = {
-        authorId: message.author.id,
+				authorId: message.author.id,
 				title: songInfo.title,
 				url: songInfo.video_url
 			};
@@ -200,12 +212,84 @@ async function execute(message, serverQueue) {
 	}
 }
 
-function skip(message, serverQueue) {
+function remove (message, serverQueue) {
 	if(!message.member.voice.channel) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'You must be in a voice channel PLEB! 😵', 'color': orange});
 	}
 	if(!serverQueue) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs in the queue, milady. 🤪', 'color': orange});
+	}
+	if(serverQueue.songs.length === 1) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs in the queue, milady. 🤪', 'color': orange}); 
+	}
+	try {
+		const removeArgs = message.content.split(' ');
+		if(!removeArgs[1]) {
+			sendEmbed(message, {'emoji': '👍', 'description': `[${serverQueue.songs[serverQueue.songs.length - 1].title}](${serverQueue.songs[serverQueue.songs.length - 1].url}) removed!`, 'color': orange});
+			serverQueue.songs.splice(serverQueue.songs.length - 1, 1);
+			return;
+		} 
+		if(removeArgs.length > 2) {
+			return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'Go home you are drunk. 🤪', 'color': orange});
+		}
+		if(serverQueue.songs[removeArgs[1]]) {
+			sendEmbed(message, {'emoji': '👍', 'description': `[${serverQueue.songs[removeArgs[1]].title}](${serverQueue.songs[removeArgs[1]].url}) removed!`, 'color': orange});
+			serverQueue.songs.splice(removeArgs[1], 1);
+			return;
+		} else {
+			return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'Go home you are drunk. 🤪', 'color': orange});
+		}
+	} catch(error) {
+		logger.info(`ERROR ON REMOVE FUNCTION - ${error}`);
+	}
+}
+
+function showQueue(message, serverQueue) {
+	if(!message.member.voice.channel) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'You must be in a voice channel PLEB! 😵', 'color': orange});
+	}
+	if(!serverQueue) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs in the queue, milady. 🤪', 'color': orange});
+	}
+	if(serverQueue.songs.length === 1) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs in the queue, milady. 🤪', 'color': orange}); 
+	}
+	let numberOfEmbeds = Math.floor((serverQueue.songs.length - 1) / 25) + 1;
+	for(let i = 0; i < numberOfEmbeds; i++) {
+		let queueEmbed = new Discord.MessageEmbed();
+		queueEmbed.setTitle('Playlist');
+		for(let j = i * 25 + 1; (j < serverQueue.songs.length) && (j <= (i + 1) * 25) ; j++) {
+			queueEmbed.addField(`#${j}`, `[${serverQueue.songs[j].title}](${serverQueue.songs[j].url}) by <@${serverQueue.songs[j].authorId}>`, false);
+		}
+		if(queueEmbed.fields.length !== 0) {
+			message.channel.send(queueEmbed).then(message => {
+				message.delete({timeout: 30000})
+			}).catch(error => {
+				logger.info(`ERROR ON SHOWQUEUE FUNCTION - ${error}`)
+			});
+		}
+	}
+	return;
+}
+
+function fuckThisShit(message, serverQueue) {
+	try {
+		serverQueue.songs = [];
+	} catch (error) {
+		logger.info(`ERROR ON FUCKTHISSHIT FUNCTION - ${error}`);
+	}
+}
+
+function skip(message, serverQueue) {
+	if(!message.member.voice.channel) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'You must be in a voice channel PLEB! 😵', 'color': orange});
+	}
+	if(!serverQueue || serverQueue.songs.length < 2) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No more songs to play, milady. 🤪', 'color': orange});
+	}
+	if(!serverQueue.connection || !serverQueue.connection.dispatcher) {
+		fuckThisShit(message, serverQueue);
+		return sendEmbed(message, {'emoji': '🔥', 'description': `Fuck this shit I'm out! 🖕`, 'color': red});
 	}
 	serverQueue.connection.dispatcher.end();
 	sendEmbed(message, {'emoji': '🤙', 'description': 'Playing next song.', 'color': brown});
@@ -214,6 +298,13 @@ function skip(message, serverQueue) {
 function stop(message, serverQueue) {
 	if(!message.member.voice.channel) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'You must be in a voice channel PLEB! 😵', 'color': orange});
+	}
+	if(!serverQueue || serverQueue.songs.length === 0) {
+		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs to be stopped, Sir. 🚬', 'color': orange});
+	}
+	if(!serverQueue.connection || !serverQueue.connection.dispatcher) {
+		fuckThisShit(message, serverQueue);
+		return sendEmbed(message, {'emoji': '🔥', 'description': `Fuck this shit I'm out! 🖕`, 'color': red});
 	}
 	try {
 		serverQueue.songs = [];
@@ -239,8 +330,11 @@ function play(message, song) {
 			serverQueue.songs.shift();
 			play(message, serverQueue.songs[0]);
 		})
-		.on('error', error => logger.info(error));
-	if(dispatcher) sendEmbed(message, {'title': `Now playing`, 'description': `[${song.title}](${song.url}) by <@${song.authorId}>`, 'color': green});
+		.on('error', error => {
+			logger.info(`ERROR ON DISPATCHER - ${error}`);
+
+		});
+	if(dispatcher) message.channel.send({embed: {title: `Now playing`, description: `[${song.title}](${song.url}) by <@${song.authorId}>`, color: green}});
 }
 
 function ping(message) {
@@ -275,8 +369,33 @@ function sendEmbed(message, opts) {
 	if(opts['field3']) messageEmbed.addField(opts['field3'].name, opts['field3'].value, true);
 	if(opts['field4']) messageEmbed.addField(opts['field4'].name, opts['field4'].value, true);
 	if(opts['field5']) messageEmbed.addField(opts['field5'].name, opts['field5'].value, true);
-	return message.channel.send(messageEmbed);
+	return message.channel.send(messageEmbed).then(message => {
+		message.delete({timeout: 60000})
+	}).catch(error => {
+		logger.info(`ERROR ON SENDEMBED FUNCTION - ${error}`)
+	});
 }
 
+async function resetBot(message, serverQueue) {
+	let isAdmin = false;
+	admins.forEach(admin => {
+		if(admin === message.member.id) isAdmin = true;
+	});
+	if(!isAdmin) return sendEmbed(message, {'emoji': '⛔', 'description': `THIS IS NOT FOR PLEBS!`, 'color': red});
+	sendEmbed(message, {'emoji': '⚠️', 'description': 'Resetting...', 'color': red});
+	try {
+		client.destroy();
+		if(serverQueue) {
+			serverQueue.songs = [];
+			if(serverQueue.connection && serverQueue.connection.dispatcher) {
+				serverQueue.connection.dispatcher.end();
+				serverQueue.connection.disconnect();
+			}
+		}
+		await client.login(token);
+	} catch(error) {
+		logger.info(`ERROR ON RESETTING - ${error}`);
+	}
+}
 
 client.login(token);
