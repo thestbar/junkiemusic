@@ -99,8 +99,6 @@ client.on('message', async message => {
 // Function that executes the play command.
 async function execute(message, serverQueue) {
 	const args = message.content.split(' ');
-	const info = await ytdl.getInfo(args[1]);
-	console.log(info);
 	if(args.length === 1) return sendEmbed(message, {'emoji': '👿', 'description': 'I need you to tell me what to play BABOON! 🤮', 'color': orange});
 	const voiceChannel = message.member.voice.channel;
 	// Check if the user is in a voice channel.
