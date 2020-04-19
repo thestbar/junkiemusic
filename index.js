@@ -88,9 +88,6 @@ client.on('message', async message => {
 	} else if(message.content.toLowerCase().startsWith(`${prefix}remove`)) {
 		remove(message, serverQueue);
 		return;
-	} else if(message.content.toLowerCase().startsWith(`${prefix}qq`)) {
-		resetBot(message, serverQueue);
-		return;
 	} else {
 		return;
 	}
@@ -270,14 +267,6 @@ function showQueue(message, serverQueue) {
 	return;
 }
 
-function fuckThisShit(message, serverQueue) {
-	try {
-		serverQueue.songs = [];
-	} catch (error) {
-		logger.info(`ERROR ON FUCKTHISSHIT FUNCTION - ${error}`);
-	}
-}
-
 function skip(message, serverQueue) {
 	if(!message.member.voice.channel) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'You must be in a voice channel PLEB! 😵', 'color': orange});
@@ -286,7 +275,6 @@ function skip(message, serverQueue) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No more songs to play, milady. 🤪', 'color': orange});
 	}
 	if(!serverQueue.connection || !serverQueue.connection.dispatcher) {
-		fuckThisShit(message, serverQueue);
 		return sendEmbed(message, {'emoji': '🔥', 'description': `Fuck this shit I'm out! 🖕`, 'color': red});
 	}
 	serverQueue.connection.dispatcher.end();
@@ -301,7 +289,6 @@ function stop(message, serverQueue) {
 		return sendEmbed(message, {'emoji': '🤦‍♂️', 'description': 'No songs to be stopped, Sir. 🚬', 'color': orange});
 	}
 	if(!serverQueue.connection || !serverQueue.connection.dispatcher) {
-		fuckThisShit(message, serverQueue);
 		return sendEmbed(message, {'emoji': '🔥', 'description': `Fuck this shit I'm out! 🖕`, 'color': red});
 	}
 	try {
@@ -372,28 +359,6 @@ function sendEmbed(message, opts) {
 	}).catch(error => {
 		logger.info(`ERROR ON SENDEMBED FUNCTION - ${error}`)
 	});
-}
-
-async function resetBot(message, serverQueue) {
-	let isAdmin = false;
-	admins.forEach(admin => {
-		if(admin === message.member.id) isAdmin = true;
-	});
-	if(!isAdmin) return sendEmbed(message, {'emoji': '⛔', 'description': `THIS IS NOT FOR PLEBS!`, 'color': red});
-	sendEmbed(message, {'emoji': '⚠️', 'description': 'Resetting...', 'color': red});
-	try {
-		client.destroy();
-		if(serverQueue) {
-			serverQueue.songs = [];
-			if(serverQueue.connection && serverQueue.connection.dispatcher) {
-				serverQueue.connection.dispatcher.end();
-				serverQueue.connection.disconnect();
-			}
-		}
-		await client.login(token);
-	} catch(error) {
-		logger.info(`ERROR ON RESETTING - ${error}`);
-	}
 }
 
 client.login(token);
