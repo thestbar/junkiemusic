@@ -1,6 +1,6 @@
 
 #   Discord Music Bot - JunkieMusic     
-##  Created by JunkieDan - version 0.1.3  
+##  Created by JunkieDan - version 0.0.1  
 
 Installation guide:
 
