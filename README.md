@@ -1,15 +1,6 @@
 
 #   Discord Music Bot - JunkieMusic     
-##  Created by JunkieDan - version 1.0.1  
-
-
-
-To add JunkieMusic into your discord channel you have to follow this [link](https://discordapp.com/oauth2/authorize?&client_id=689847120802611297&scope=bot&permissions=8).
-
-When you click this link your browser will open it up. On the field which says
-"ADD BOT TO" you select the server that you want to add the bot. Finally you
-click Continue and you are done. Your download is really appreciated. Thank you!
-
+##  Created by JunkieDan - version 0.1.3  
 
 Installation guide:
 
@@ -26,6 +17,10 @@ Installation guide:
   following command: "node index.js". The bot should be up and running. You can
   see that bot started without any occuring problems by checking your terminal.
   The bot should log the following: "JunkieMusic is running. Version X.X.X".
+  
+* Node version 12.16.2
+  Discord.js version 12.2.0
+  FFmpeg version 4.2.2
 
 
-#####       Last updated: 25/03/2020    
+#####       Last updated: 27/04/2020    
