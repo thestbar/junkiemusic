@@ -1,6 +1,6 @@
 {
   "prefix": "-",
   "token": "BOT_TOKEN",
-  "version": "0.1.3",
+  "version": "0.0.1",
   "admins": ["ADMIN_ID1", "ADMIN_ID2"]
 }
