@@ -2,6 +2,26 @@
 #   Discord Music Bot - JunkieMusic     
 ##  Created by JunkieDan - version 0.0.1  
 
+This is a discord youtube music bot. This bot has bad manners and flames the users a lot.
+It was created so that you can have fun with your friends in your discord server.
+The bot is not complete and it has some bugs. Also it uses embeds so the messages are polite.
+
+Available commands:
+
+* -play or -p to play a song.
+
+* -next or -n to skip a song.
+
+* -stop or -s to stop the song list.
+
+* -ping for pongs.
+
+* -help or -h for basic user help.
+
+* -queue to see the songs queue track by track.
+
+* -remove [#] to remove a song from the queue.
+
 Installation guide:
 
 * Download and install nodejs and npm on your computer.
