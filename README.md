@@ -18,7 +18,7 @@ Installation guide:
   see that bot started without any occuring problems by checking your terminal.
   The bot should log the following: "JunkieMusic is running. Version X.X.X".
   
-* Node version 12.16.2 - Discord.js version 12.2.0 - FFmpeg version 4.2.2
+* Node version 12.16.2 - Discord.js version 12.0.2 - FFmpeg version 4.2.2
 
 
 #####       Last updated: 27/04/2020    
