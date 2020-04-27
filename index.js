@@ -317,7 +317,7 @@ function play(message, song) {
 		})
 		.on('error', error => {
 			logger.info(`ERROR ON DISPATCHER - ${error}`);
-
+			dispatcher.end();
 		});
 	if(dispatcher) message.channel.send({embed: {title: `Now playing`, description: `[${song.title}](${song.url}) by <@${song.authorId}>`, color: green}});
 }
