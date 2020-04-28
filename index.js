@@ -317,7 +317,7 @@ function play(message, song) {
 		})
 		.on('error', error => {
 			logger.info(`ERROR ON DISPATCHER - ${error}`);
-			sendEmbed(message, {'description': 'There is something messed up with my brain, miladies.. 😭', 'color': red});
+			sendEmbed(message, {'description': `There is something messed up with my brain, miladies.. 😭`, 'color': red});
 			dispatcher.end();
 		});
 	if(dispatcher) message.channel.send({embed: {title: `Now playing`, description: `[${song.title}](${song.url}) by <@${song.authorId}>`, color: green}});
@@ -340,26 +340,30 @@ function help(message) {
 
 function sendEmbed(message, opts) {
 	let messageEmbed = new Discord.MessageEmbed();
-
-	if(opts['emoji']) message.react(opts['emoji']);
-	if(opts['author']) messageEmbed.setAuthor(opts['author'].name, opts['author'].iconURL, opts['author'].url);
-	if(opts['color']) messageEmbed.setColor(opts['color']);
-	if(opts['description']) messageEmbed.setDescription(opts['description']);
-	if(opts['footer']) messageEmbed.setFooter(opts['footer'].text, opts['footer'].iconURL);
-	if(opts['image']) messageEmbed.setImage(opts['image']);
-	if(opts['thumbnail']) messageEmbed.setThumbnail(opts['thumbnail']);
-	if(opts['title']) messageEmbed.setTitle(opts['title']);
-	if(opts['url']) messageEmbed.setURL(opts['url']);
-	if(opts['field1']) messageEmbed.addField(opts['field1'].name, opts['field1'].value, true);
-	if(opts['field2']) messageEmbed.addField(opts['field2'].name, opts['field2'].value, true);
-	if(opts['field3']) messageEmbed.addField(opts['field3'].name, opts['field3'].value, true);
-	if(opts['field4']) messageEmbed.addField(opts['field4'].name, opts['field4'].value, true);
-	if(opts['field5']) messageEmbed.addField(opts['field5'].name, opts['field5'].value, true);
-	return message.channel.send(messageEmbed).then(message => {
-		message.delete({timeout: 60000})
-	}).catch(error => {
-		logger.info(`ERROR ON SENDEMBED FUNCTION - ${error}`)
-	});
+	try {	
+		if(opts['emoji']) message.react(opts['emoji']);
+		if(opts['author']) messageEmbed.setAuthor(opts['author'].name, opts['author'].iconURL, opts['author'].url);
+		if(opts['color']) messageEmbed.setColor(opts['color']);
+		if(opts['description']) messageEmbed.setDescription(opts['description']);
+		if(opts['footer']) messageEmbed.setFooter(opts['footer'].text, opts['footer'].iconURL);
+		if(opts['image']) messageEmbed.setImage(opts['image']);
+		if(opts['thumbnail']) messageEmbed.setThumbnail(opts['thumbnail']);
+		if(opts['title']) messageEmbed.setTitle(opts['title']);
+		if(opts['url']) messageEmbed.setURL(opts['url']);
+		if(opts['field1']) messageEmbed.addField(opts['field1'].name, opts['field1'].value, true);
+		if(opts['field2']) messageEmbed.addField(opts['field2'].name, opts['field2'].value, true);
+		if(opts['field3']) messageEmbed.addField(opts['field3'].name, opts['field3'].value, true);
+		if(opts['field4']) messageEmbed.addField(opts['field4'].name, opts['field4'].value, true);
+		if(opts['field5']) messageEmbed.addField(opts['field5'].name, opts['field5'].value, true);
+	} catch(error) {
+		logger.info(`ERROR ON SENDEMBED FUNCTION WHEN TRYING TO CREATE THE EMBED - ${error}`);
+	} finally {
+		return message.channel.send(messageEmbed).then(message => {
+			message.delete({timeout: 60000})
+		}).catch(error => {
+			logger.info(`ERROR ON SENDEMBED FUNCTION WHEN TRYING TO PRINT THE EMBED - ${error}`);
+		});
+	}
 }
 
 client.login(token);
