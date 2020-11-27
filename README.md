@@ -9,7 +9,6 @@ The bot is not complete and it has some bugs. Also it uses embeds so the message
 Available commands:
 
 * -play or -p to play a song.
-
 * -next or -n to skip a song.
 
 * -stop or -s to stop the song list.
